@@ -1,0 +1,7 @@
+reports/*.html
+reports/*.txt
+reports/*.log
+__pycache__/
+*.pyc
+*.zip
+redesign.py
