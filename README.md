@@ -286,6 +286,8 @@ Q-Recon includes a built-in authorization check (`utils/authorization.py`) that 
 - GitHub: [@ShlokTrivedi1023](https://github.com/ShlokTrivedi1023)
 - Submitted to: Black Hat USA — Arsenal & Briefings 2026
 
+**Shreeya Shah** — Contributor
+- Email: shreeyashah001@gmail.com
 ---
 
 ## License
