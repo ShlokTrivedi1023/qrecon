@@ -182,25 +182,28 @@ pip3 install -r requirements.txt
 sudo python3 qrecon.py -t <target>
 ```
 
-### Full Assessment
+### Scan with Verbose Output
 
 ```bash
-sudo python3 qrecon.py -t <target> --full
+sudo python3 qrecon.py -t <target> --verbose
 ```
 
-### Specific Module
+### Scan with Report Output
 
 ```bash
-sudo python3 qrecon.py -t <target> --module rsa
-sudo python3 qrecon.py -t <target> --module ecc
-sudo python3 qrecon.py -t <target> --module dh
+sudo python3 qrecon.py -t <target> -o report.txt --verbose
 ```
 
-### With Report Output
+### Scan on Specific Port
 
 ```bash
-sudo python3 qrecon.py -t <target> --full --report html
-sudo python3 qrecon.py -t <target> --full --report txt
+sudo python3 qrecon.py -t <target> -p 8443 --verbose
+```
+
+### Skip Authorization Prompt
+
+```bash
+sudo python3 qrecon.py -t <target> --skip-auth --verbose
 ```
 
 ### Interactive Dashboard
@@ -213,12 +216,10 @@ sudo python3 dashboard.py
 
 | Flag | Description |
 |------|-------------|
-| `-t` | Target IP or hostname |
-| `--full` | Run all assessment modules |
-| `--module` | Run a specific module only |
-| `--port` | Target specific port |
-| `--report` | Output format: `html` or `txt` |
-| `--timeout` | Connection timeout in seconds |
+| `-t` / `--target` | Target IP or hostname |
+| `-p` / `--port` | Target specific port |
+| `-o` / `--output` | Output file for report |
+| `--skip-auth` | Skip authorization confirmation prompt |
 | `--verbose` | Verbose output |
 
 ---
@@ -286,8 +287,6 @@ Q-Recon includes a built-in authorization check (`utils/authorization.py`) that 
 - GitHub: [@ShlokTrivedi1023](https://github.com/ShlokTrivedi1023)
 - Submitted to: Black Hat USA — Arsenal & Briefings 2026
 
-**Shreeya Shah** — Contributor
-- Email: shreeyashah001@gmail.com
 ---
 
 ## License
