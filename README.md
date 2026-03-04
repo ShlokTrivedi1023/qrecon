@@ -31,12 +31,13 @@
 Q-Recon is a purpose-built, modular offensive security assessment framework that identifies cryptographic weaknesses in systems, services, and infrastructure that are vulnerable to quantum computing attacks. Unlike conventional security scanners that focus on classical vulnerabilities, Q-Recon specifically targets post-quantum readiness — evaluating whether deployed cryptographic primitives can withstand attacks from quantum adversaries.
 
 Q-Recon was built for:
+
 - **Penetration testers** assessing enterprise quantum readiness
 - **Security researchers** studying real-world post-quantum migration gaps
 - **Red teams** identifying cryptographic attack surfaces
 - **Organizations** benchmarking their quantum resilience posture
 
-Q-Recon is written in Python, runs natively on Kali Linux, and requires no external cloud dependencies — all assessments are performed locally.
+Q-Recon is written in Python 3, runs natively on Kali Linux, and requires no external cloud dependencies — all assessments are performed locally.
 
 ---
 
@@ -45,11 +46,12 @@ Q-Recon is written in Python, runs natively on Kali Linux, and requires no exter
 The advent of large-scale quantum computers poses an existential threat to the cryptographic infrastructure underpinning modern security. Shor's algorithm, running on a sufficiently powerful quantum computer, can factor large integers and solve discrete logarithm problems in polynomial time — breaking RSA, ECC, Diffie-Hellman, and other widely deployed asymmetric cryptosystems entirely.
 
 The timeline is accelerating:
+
 - **2024:** IBM, Google, and others demonstrated quantum processors exceeding 1,000 qubits
-- **2024:** NIST finalized the first set of Post-Quantum Cryptography (PQC) standards (FIPS 203, 204, 205)
+- **2024:** NIST finalized the first Post-Quantum Cryptography (PQC) standards — FIPS 203, FIPS 204, and FIPS 205
 - **2030 (projected):** Cryptographically relevant quantum computers (CRQCs) capable of breaking 2048-bit RSA
 
-The security community faces a critical window: systems must be identified, assessed, and migrated to quantum-safe algorithms **before** this threshold is crossed. Q-Recon exists to accelerate this identification process.
+The security community faces a critical window: systems must be identified, assessed, and migrated to quantum-safe algorithms before this threshold is crossed. Q-Recon exists to accelerate this identification process.
 
 **Harvest Now, Decrypt Later (HNDL)** attacks are already underway — adversaries are recording encrypted traffic today with the intent to decrypt it once quantum hardware matures. This makes assessment urgent even now.
 
@@ -57,21 +59,21 @@ The security community faces a critical window: systems must be identified, asse
 
 ## Why Q-Recon
 
-Existing security tools such as testssl.sh, SSLyze, and Nmap do not assess quantum resilience. They flag classical weaknesses but have no awareness of:
+Existing security tools such as testssl.sh, SSLyze, and Nmap assess classical vulnerabilities but have no awareness of quantum risk. They cannot answer:
 
-- Whether RSA key sizes are quantum-safe
-- Whether ECC curves are vulnerable to quantum attacks
-- Whether Diffie-Hellman parameters are at risk from quantum algorithms
+- Whether RSA key sizes are vulnerable to Shor's algorithm on a near-future CRQC
+- Whether ECC curves are broken by quantum attacks regardless of key size
+- Whether Diffie-Hellman parameters provide any quantum resistance
 - Whether hash functions provide adequate post-quantum security margins
 - Whether symmetric key lengths meet post-quantum requirements
 
-Q-Recon fills this gap. It is the first unified framework that combines:
+A system can pass every classical security check and simultaneously carry a CRITICAL quantum risk rating. Q-Recon is the first unified framework that bridges this gap by combining:
 
 1. Active service enumeration
 2. Cryptographic primitive extraction
 3. Quantum-risk scoring per algorithm
-4. PQC migration recommendations
-5. Automated HTML and text reporting
+4. NIST PQC migration recommendations
+5. Automated HTML and plain text reporting
 
 ---
 
@@ -99,7 +101,7 @@ qrecon/
 │   └── starttls_assessor.py   # STARTTLS and mail server assessment
 ├── reports/
 │   ├── __init__.py
-│   └── report_engine.py       # HTML and text report generation
+│   └── report_engine.py       # HTML and plain text report generation
 └── utils/
     ├── __init__.py
     ├── authorization.py       # Scope and authorization management
@@ -112,53 +114,55 @@ qrecon/
 ## Modules
 
 ### Enumerator (`enumerator.py`)
-Performs active service discovery and port enumeration on the target. Identifies running services, extracts TLS/SSL handshake data, and fingerprints cryptographic configurations exposed by each service. Feeds structured data into all assessment modules.
+Performs active service discovery and port enumeration on the target. Identifies running services, extracts TLS/SSL handshake data, and fingerprints cryptographic configurations exposed by each service. Feeds structured data into all downstream assessment modules.
 
 ### RSA Assessor (`rsa_assessor.py`)
-Extracts RSA public keys from TLS certificates and other sources. Evaluates key sizes against quantum-safety thresholds:
+Extracts RSA public key parameters from TLS certificates and evaluates key sizes against quantum-safety thresholds:
 - Less than 2048-bit: Classically weak, immediately vulnerable
 - 2048-bit: Classical standard, quantum-broken by Shor's algorithm
-- 4096-bit: Extended runway, still quantum-vulnerable
-- Flags all RSA usage and recommends migration to CRYSTALS-Kyber / CRYSTALS-Dilithium
+- 4096-bit: Extended runway, still fully quantum-vulnerable
+
+Flags all RSA usage and recommends migration to CRYSTALS-Kyber (FIPS 203) and CRYSTALS-Dilithium (FIPS 204).
 
 ### ECC Assessor (`ecc_assessor.py`)
-Identifies elliptic curve parameters in use across services. Evaluates named curves (P-256, P-384, secp256k1, Curve25519, etc.) for quantum vulnerability. All current ECC curves are broken by Shor's algorithm on a CRQC. Recommends migration to NIST PQC standards.
+Identifies elliptic curve parameters in use across services. Evaluates named curves (P-256, P-384, secp256k1, Curve25519, and others) for quantum vulnerability. All current ECC curves are broken by Shor's algorithm on a CRQC regardless of key size. Recommends migration to NIST PQC standards.
 
 ### Diffie-Hellman Assessor (`dh_assessor.py`)
-Detects DH and ECDH key exchange in TLS handshakes. Assesses parameter sizes and known weak groups. Flags ephemeral vs static DH usage. All classical DH is quantum-vulnerable via Shor's algorithm.
+Detects DH and ECDH key exchange in TLS handshakes. Assesses parameter sizes and known weak groups. Flags ephemeral vs static DH usage. All classical DH variants are quantum-vulnerable via Shor's algorithm.
 
 ### Symmetric Assessor (`symmetric_assessor.py`)
 Evaluates symmetric cipher suites in use. Applies Grover's algorithm analysis — quantum computers halve the effective security of symmetric keys:
 - AES-128: Reduces to approximately 64-bit effective security post-quantum (insufficient)
 - AES-256: Reduces to approximately 128-bit effective security post-quantum (acceptable)
-- Flags 3DES, RC4, and other weak symmetric ciphers
+- Flags 3DES, RC4, and other deprecated ciphers
 
 ### Hash Assessor (`hash_assessor.py`)
 Identifies hash functions in use across services and certificates. Evaluates quantum resistance:
-- MD5, SHA-1: Broken classically, critically weak post-quantum
+- MD5, SHA-1: Broken classically and critically weak post-quantum
 - SHA-256: Grover-reduced to approximately 128-bit (marginal post-quantum)
-- SHA-384/512: Acceptable post-quantum security margins
+- SHA-384, SHA-512: Acceptable post-quantum security margins
 - Recommends SHA-3 family for quantum-resilient deployments
 
 ### Signature Assessor (`signature_assessor.py`)
-Inspects digital signature schemes used in certificates, code signing, and authentication. All RSA and ECDSA signatures are quantum-vulnerable. Assesses algorithm selection and recommends CRYSTALS-Dilithium or FALCON as quantum-safe alternatives.
+Inspects digital signature schemes used in certificates, code signing, and authentication. All RSA and ECDSA signatures are quantum-vulnerable. Recommends CRYSTALS-Dilithium (FIPS 204) or FALCON as quantum-safe alternatives.
 
 ### API Assessor (`api_assessor.py`)
-Assesses REST API endpoints for cryptographic weaknesses. Inspects TLS configuration, token algorithms (JWT RS256 vs HS256), API key lengths, and transport-layer security. Identifies APIs transmitting data under quantum-vulnerable encryption.
+Assesses REST API endpoints for cryptographic weaknesses. Inspects TLS configuration, token algorithms (JWT RS256 vs HS256), API key lengths, and transport-layer security configurations.
 
 ### IoT Assessor (`iot_assessor.py`)
-Specialized module for IoT device assessment. Many IoT devices run constrained cryptographic implementations — lightweight RSA, short ECC keys, or pre-shared keys. This module identifies and scores the quantum risk of IoT cryptographic configurations.
+Specialized module for IoT device cryptographic assessment. IoT devices frequently implement constrained cryptographic protocols with reduced key sizes, pre-shared keys, and legacy cipher suites — creating concentrated quantum risk surfaces.
 
 ### STARTTLS Assessor (`starttls_assessor.py`)
-Targets mail servers and services using STARTTLS (SMTP, IMAP, POP3). Extracts cipher suites and certificates from opportunistic TLS deployments. Mail infrastructure is frequently under-assessed and often carries legacy cryptography.
+Targets mail servers and services using STARTTLS (SMTP, IMAP, POP3). Extracts cipher suites and certificates from opportunistic TLS deployments. Mail infrastructure is frequently overlooked in security assessments and commonly carries legacy cryptographic configurations with significant quantum exposure.
 
 ---
 
 ## Installation
 
 ### Requirements
+
 - Kali Linux (recommended) or any Debian-based Linux
-- Python 3.8+
+- Python 3.8 or higher
 - Root or sudo privileges for raw socket operations
 
 ### Quick Install
@@ -235,59 +239,59 @@ sudo python3 dashboard.py
   Version 1.0 | Authorized Penetration Testing ONLY
 ============================================================
 
-[*] Target : google.com
-[*] Time   : 2026-03-03 14:19:50
+[*] Target : authorized-target.com
+[*] Time   : 2026-03-03 16:35:04
 
 =======================================================
   PHASE 1: TARGET ENUMERATION
 =======================================================
-    [+] IP       : 142.251.220.14
+    [+] IP       : 162.241.85.135
     [+] Port     : OPEN
-    [+] TLS      : TLSv1.3
-    [+] Cipher   : TLS_AES_256_GCM_SHA384
+    [+] TLS      : TLSv1.2
+    [+] Cipher   : ECDHE-RSA-AES128-GCM-SHA256
 
 =======================================================
   PHASE 2: CRYPTOGRAPHIC ASSESSMENT
 =======================================================
 [+] RSA Assessment
 ----------------------------------------
-    Status  : INFO
-    Finding : Certificate uses ECC not RSA
+    Status  : CRITICAL
+    Finding : RSA-2048 detected - quantum vulnerable within 5-10 years
 
 [+] ECC Exposure
 ----------------------------------------
     Status  : CRITICAL
-    Finding : ECC curve secp256r1 detected - quantum vulnerable
+    Finding : ECC detected in cipher suite - quantum vulnerable
 
 [+] Key Exchange
 ----------------------------------------
-    Status  : INFO
-    Finding : Key exchange: TLS_AES_256_GCM_SHA384
+    Status  : CRITICAL
+    Finding : DHE key exchange - quantum vulnerable
 
 [+] Digital Signatures
 ----------------------------------------
     Status  : MEDIUM
-    Finding : Signature: SHA256
+    Finding : Signature: SHA256 - Grover reduces to 128-bit effective security
 
 [+] Symmetric Encryption
 ----------------------------------------
-    Status  : LOW
-    Finding : AES-256 - adequate quantum resistance
+    Status  : HIGH
+    Finding : AES-128 - Grover reduces to 64-bit effective security
 
 [+] Hash Functions
 ----------------------------------------
     Status  : MEDIUM
-    Finding : SHA-256 - Grover's reduces to 128-bit effective security
+    Finding : SHA-256 - Grover reduces to 128-bit effective security
 
 =======================================================
   QUANTUM RISK SCORE
 =======================================================
-  Score  : 40.8/100
-  Rating : MEDIUM
+  Score  : 79.2/100
+  Rating : CRITICAL
 
 =======================================================
-[OK] Report: reports/qrecon_google_com_20260303_141952.html
-[OK] Done  : reports/qrecon_google_com_20260303_141952.txt
+[OK] Report : reports/qrecon_authorized_target_20260303_163504.html
+[OK] Done   : reports/qrecon_authorized_target_20260303_163504.txt
 ```
 
 ---
@@ -308,13 +312,31 @@ To open the HTML report in a browser:
 xdg-open reports/<report_filename>.html
 ```
 
+To view the plain text report in the terminal:
+
+```bash
+cat reports/<report_filename>.txt
+```
+
+To list all generated reports:
+
+```bash
+ls -la reports/
+```
+
 ---
 
 ## Legal Disclaimer
 
-Q-Recon is designed for **authorized security assessments only**. Use of this tool against systems without explicit written permission is illegal and unethical. The authors accept no liability for misuse.
+Q-Recon is designed for **authorized security assessments only**. Use of this tool against systems without explicit written permission from the system owner is illegal and unethical. The authors accept no liability for misuse of this tool.
 
-Q-Recon includes a built-in authorization verification prompt (`utils/authorization.py`) that requires the user to confirm written authorization, scope, and legal responsibility before any scan begins. This can be bypassed only with the `--skip-auth` flag in controlled lab environments.
+Q-Recon includes a built-in authorization verification prompt (`utils/authorization.py`) that requires the user to confirm:
+
+1. Written authorization from the target owner
+2. That the target falls within agreed testing scope
+3. Full legal responsibility for the assessment
+
+This prompt must be answered affirmatively before any scan begins. It can be bypassed only with the `--skip-auth` flag in controlled lab environments.
 
 ---
 
