@@ -1,16 +1,12 @@
 # Q-Recon — Quantum-Resilience Offensive Security Assessment Framework
 
-> **The first open-source offensive security framework designed to assess cryptographic resilience against quantum computing attacks.**
+> The first open-source offensive security framework designed to assess cryptographic resilience against quantum computing attacks.
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Kali-red)
-![Black Hat Arsenal](https://img.shields.io/badge/Black%20Hat-Arsenal%202026-black)
+![Python](https://img.shields.io/badge/python-3.8+-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Platform](https://img.shields.io/badge/platform-Kali%20Linux-red) ![Black Hat Arsenal](https://img.shields.io/badge/Black%20Hat-Arsenal%202026-black)
 
 ---
 
 ## Table of Contents
-
 - [Overview](#overview)
 - [The Quantum Threat](#the-quantum-threat)
 - [Why Q-Recon](#why-q-recon)
@@ -32,10 +28,10 @@ Q-Recon is a purpose-built, modular offensive security assessment framework that
 
 Q-Recon was built for:
 
-- **Penetration testers** assessing enterprise quantum readiness
-- **Security researchers** studying real-world post-quantum migration gaps
-- **Red teams** identifying cryptographic attack surfaces
-- **Organizations** benchmarking their quantum resilience posture
+- Penetration testers assessing enterprise quantum readiness
+- Security researchers studying real-world post-quantum migration gaps
+- Red teams identifying cryptographic attack surfaces
+- Organizations benchmarking their quantum resilience posture
 
 Q-Recon is written in Python 3, runs natively on Kali Linux, and requires no external cloud dependencies — all assessments are performed locally.
 
@@ -67,18 +63,17 @@ Existing security tools such as testssl.sh, SSLyze, and Nmap assess classical vu
 - Whether hash functions provide adequate post-quantum security margins
 - Whether symmetric key lengths meet post-quantum requirements
 
-A system can pass every classical security check and simultaneously carry a CRITICAL quantum risk rating. Q-Recon is the first unified framework that bridges this gap by combining:
+A system can pass every classical security check and simultaneously carry a **CRITICAL** quantum risk rating. Q-Recon is the first unified framework that bridges this gap by combining:
 
-1. Active service enumeration
-2. Cryptographic primitive extraction
-3. Quantum-risk scoring per algorithm
-4. NIST PQC migration recommendations
-5. Automated HTML and plain text reporting
+- Active service enumeration
+- Cryptographic primitive extraction
+- Quantum-risk scoring per algorithm
+- NIST PQC migration recommendations
+- Automated HTML and plain text reporting
 
 ---
 
 ## Architecture
-
 ```
 qrecon/
 ├── qrecon.py                  # Main entry point and CLI
@@ -113,10 +108,10 @@ qrecon/
 
 ## Modules
 
-### Enumerator (`enumerator.py`)
+### Enumerator (enumerator.py)
 Performs active service discovery and port enumeration on the target. Identifies running services, extracts TLS/SSL handshake data, and fingerprints cryptographic configurations exposed by each service. Feeds structured data into all downstream assessment modules.
 
-### RSA Assessor (`rsa_assessor.py`)
+### RSA Assessor (rsa_assessor.py)
 Extracts RSA public key parameters from TLS certificates and evaluates key sizes against quantum-safety thresholds:
 - Less than 2048-bit: Classically weak, immediately vulnerable
 - 2048-bit: Classical standard, quantum-broken by Shor's algorithm
@@ -124,35 +119,36 @@ Extracts RSA public key parameters from TLS certificates and evaluates key sizes
 
 Flags all RSA usage and recommends migration to CRYSTALS-Kyber (FIPS 203) and CRYSTALS-Dilithium (FIPS 204).
 
-### ECC Assessor (`ecc_assessor.py`)
+### ECC Assessor (ecc_assessor.py)
 Identifies elliptic curve parameters in use across services. Evaluates named curves (P-256, P-384, secp256k1, Curve25519, and others) for quantum vulnerability. All current ECC curves are broken by Shor's algorithm on a CRQC regardless of key size. Recommends migration to NIST PQC standards.
 
-### Diffie-Hellman Assessor (`dh_assessor.py`)
+### Diffie-Hellman Assessor (dh_assessor.py)
 Detects DH and ECDH key exchange in TLS handshakes. Assesses parameter sizes and known weak groups. Flags ephemeral vs static DH usage. All classical DH variants are quantum-vulnerable via Shor's algorithm.
 
-### Symmetric Assessor (`symmetric_assessor.py`)
+### Symmetric Assessor (symmetric_assessor.py)
 Evaluates symmetric cipher suites in use. Applies Grover's algorithm analysis — quantum computers halve the effective security of symmetric keys:
 - AES-128: Reduces to approximately 64-bit effective security post-quantum (insufficient)
 - AES-256: Reduces to approximately 128-bit effective security post-quantum (acceptable)
 - Flags 3DES, RC4, and other deprecated ciphers
 
-### Hash Assessor (`hash_assessor.py`)
+### Hash Assessor (hash_assessor.py)
 Identifies hash functions in use across services and certificates. Evaluates quantum resistance:
 - MD5, SHA-1: Broken classically and critically weak post-quantum
 - SHA-256: Grover-reduced to approximately 128-bit (marginal post-quantum)
 - SHA-384, SHA-512: Acceptable post-quantum security margins
-- Recommends SHA-3 family for quantum-resilient deployments
 
-### Signature Assessor (`signature_assessor.py`)
+Recommends SHA-3 family for quantum-resilient deployments.
+
+### Signature Assessor (signature_assessor.py)
 Inspects digital signature schemes used in certificates, code signing, and authentication. All RSA and ECDSA signatures are quantum-vulnerable. Recommends CRYSTALS-Dilithium (FIPS 204) or FALCON as quantum-safe alternatives.
 
-### API Assessor (`api_assessor.py`)
+### API Assessor (api_assessor.py)
 Assesses REST API endpoints for cryptographic weaknesses. Inspects TLS configuration, token algorithms (JWT RS256 vs HS256), API key lengths, and transport-layer security configurations.
 
-### IoT Assessor (`iot_assessor.py`)
-Specialized module for IoT device cryptographic assessment. IoT devices frequently implement constrained cryptographic protocols with reduced key sizes, pre-shared keys, and legacy cipher suites — creating concentrated quantum risk surfaces.
+### IoT Assessor (iot_assessor.py)
+Specialized module for IoT device cryptographic assessment. Scans common IoT ports (MQTT, CoAP, HTTPS-ALT, Telnet, SSH) and evaluates cryptographic configurations. IoT devices frequently implement constrained cryptographic protocols with reduced key sizes, pre-shared keys, and legacy cipher suites — creating concentrated quantum risk surfaces.
 
-### STARTTLS Assessor (`starttls_assessor.py`)
+### STARTTLS Assessor (starttls_assessor.py)
 Targets mail servers and services using STARTTLS (SMTP, IMAP, POP3). Extracts cipher suites and certificates from opportunistic TLS deployments. Mail infrastructure is frequently overlooked in security assessments and commonly carries legacy cryptographic configurations with significant quantum exposure.
 
 ---
@@ -160,13 +156,11 @@ Targets mail servers and services using STARTTLS (SMTP, IMAP, POP3). Extracts ci
 ## Installation
 
 ### Requirements
-
 - Kali Linux (recommended) or any Debian-based Linux
 - Python 3.8 or higher
 - Root or sudo privileges for raw socket operations
 
 ### Quick Install
-
 ```bash
 git clone https://github.com/ShlokTrivedi1023/qrecon.git
 cd qrecon
@@ -174,7 +168,6 @@ sudo python3 install.py
 ```
 
 ### Manual Dependency Install
-
 ```bash
 sudo pip3 install -r requirements.txt
 ```
@@ -184,37 +177,31 @@ sudo pip3 install -r requirements.txt
 ## Usage
 
 ### Basic Scan
-
 ```bash
 sudo python3 qrecon.py -t <target>
 ```
 
 ### Scan with Verbose Output
-
 ```bash
 sudo python3 qrecon.py -t <target> --verbose
 ```
 
 ### Scan on Specific Port
-
 ```bash
 sudo python3 qrecon.py -t <target> -p 8443 --verbose
 ```
 
 ### Scan with Report Output
-
 ```bash
 sudo python3 qrecon.py -t <target> -o report.txt --verbose
 ```
 
 ### Skip Authorization Prompt
-
 ```bash
 sudo python3 qrecon.py -t <target> --skip-auth --verbose
 ```
 
 ### Interactive Dashboard
-
 ```bash
 sudo python3 dashboard.py
 ```
@@ -232,15 +219,14 @@ sudo python3 dashboard.py
 ---
 
 ## Sample Output
-
 ```
-============================================================
+=======================================================
   Q-RECON: Quantum-Resilience Assessment Framework
   Version 1.0 | Authorized Penetration Testing ONLY
-============================================================
+=======================================================
 
 [*] Target : authorized-target.com
-[*] Time   : 2026-03-03 16:35:04
+[*] Time   : 2026-03-06 15:29:04
 
 =======================================================
   PHASE 1: TARGET ENUMERATION
@@ -253,6 +239,7 @@ sudo python3 dashboard.py
 =======================================================
   PHASE 2: CRYPTOGRAPHIC ASSESSMENT
 =======================================================
+
 [+] RSA Assessment
 ----------------------------------------
     Status  : CRITICAL
@@ -283,6 +270,26 @@ sudo python3 dashboard.py
     Status  : MEDIUM
     Finding : SHA-256 - Grover reduces to 128-bit effective security
 
+[+] API Assessment
+----------------------------------------
+    [*] Scanning 8 common API endpoints
+    Status  : HIGH
+    Finding : Quantum-vulnerable TLS configuration detected on API endpoints
+
+[+] IoT Assessment
+----------------------------------------
+    [*] Scanning IoT ports on : authorized-target.com
+    [*] Checking 10 common IoT ports
+    Status  : CRITICAL
+    Finding : 1 unencrypted IoT protocol(s) detected — 2 ports open
+
+[+] STARTTLS Assessment
+----------------------------------------
+    [*] Protocol : SMTP
+    [*] Port     : 25
+    Status  : CRITICAL
+    Finding : RSA-2048 detected via STARTTLS — quantum vulnerable
+
 =======================================================
   QUANTUM RISK SCORE
 =======================================================
@@ -290,8 +297,8 @@ sudo python3 dashboard.py
   Rating : CRITICAL
 
 =======================================================
-[OK] Report : reports/qrecon_authorized_target_20260303_163504.html
-[OK] Done   : reports/qrecon_authorized_target_20260303_163504.txt
+[OK] Report : reports/qrecon_authorized_target_20260306_152904.html
+[OK] Done   : reports/qrecon_authorized_target_20260306_152904.txt
 ```
 
 ---
@@ -307,19 +314,16 @@ Q-Recon automatically generates reports in both HTML and plain text formats afte
 - Remediation priority ordering
 
 To open the HTML report in a browser:
-
 ```bash
 xdg-open reports/<report_filename>.html
 ```
 
 To view the plain text report in the terminal:
-
 ```bash
 cat reports/<report_filename>.txt
 ```
 
 To list all generated reports:
-
 ```bash
 ls -la reports/
 ```
@@ -328,13 +332,13 @@ ls -la reports/
 
 ## Legal Disclaimer
 
-Q-Recon is designed for **authorized security assessments only**. Use of this tool against systems without explicit written permission from the system owner is illegal and unethical. The authors accept no liability for misuse of this tool.
+Q-Recon is designed for authorized security assessments only. Use of this tool against systems without explicit written permission from the system owner is illegal and unethical. The authors accept no liability for misuse of this tool.
 
 Q-Recon includes a built-in authorization verification prompt (`utils/authorization.py`) that requires the user to confirm:
 
-1. Written authorization from the target owner
-2. That the target falls within agreed testing scope
-3. Full legal responsibility for the assessment
+- Written authorization from the target owner
+- That the target falls within agreed testing scope
+- Full legal responsibility for the assessment
 
 This prompt must be answered affirmatively before any scan begins. It can be bypassed only with the `--skip-auth` flag in controlled lab environments.
 
@@ -342,21 +346,21 @@ This prompt must be answered affirmatively before any scan begins. It can be byp
 
 ## Authors and Contributors
 
-**Shlok Trivedi** — Author 
+**Shlok Trivedi** — Author
 - GitHub: [@ShlokTrivedi1023](https://github.com/ShlokTrivedi1023)
 - Email: shloktrivedi1023@gmail.com
 
 **Shreeya Shah** — Contributor
 - Email: shreeyashah001@gmail.com
 
-*Submitted to: Black Hat USA — Arsenal and Briefings 2026*
+Submitted to: **Black Hat USA — Arsenal 2026**
 
 ---
 
 ## License
 
-MIT License — see LICENSE file for details.
+MIT License — see [LICENSE](LICENSE) file for details.
 
 ---
 
-*Q-Recon — Because the quantum threat is not coming. It is already here.*
+> **Q-Recon — Because the quantum threat is not coming. It is already here.**
