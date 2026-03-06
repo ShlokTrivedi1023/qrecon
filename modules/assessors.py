@@ -1,3 +1,4 @@
+
 class SignatureAssessor:
     def __init__(self, target, port, enum_results, verbose=False):
         self.enum_results = enum_results
@@ -25,10 +26,6 @@ class SignatureAssessor:
             r["severity"] = "CRITICAL"
             r["finding"] = "ECDSA signature - quantum forgeable"
             r["remediation"] = ["Replace with CRYSTALS-Dilithium or FALCON"]
-        elif alg == "UNKNOWN":
-            r["severity"] = "UNKNOWN"
-            r["finding"] = "Could not retrieve certificate for signature analysis"
-            r["remediation"] = ["Manually verify certificate signature algorithm"]
         else:
             r["severity"] = "MEDIUM"
             r["finding"] = "Signature: " + alg
@@ -50,7 +47,8 @@ class SymmetricAssessor:
         elif "AES_128" in cipher or "AES128" in cipher:
             r["severity"] = "HIGH"
             r["finding"] = "AES-128 - Grover's reduces to 64-bit security"
-            r["remediation"] = ["Upgrade to AES-256 immediately"]
+            r["risk_description"] = "Grover's algorithm halves key strength. AES-128 becomes 64-bit equivalent."
+            r["remediation"] = ["Upgrade to AES-256 immediately", "Use AES-256-GCM"]
         elif "3DES" in cipher or "DES" in cipher:
             r["severity"] = "CRITICAL"
             r["finding"] = "3DES/DES detected - broken"
@@ -59,10 +57,6 @@ class SymmetricAssessor:
             r["severity"] = "LOW"
             r["finding"] = "ChaCha20-256 - good quantum resistance"
             r["remediation"] = ["Current config is adequate"]
-        elif not cipher:
-            r["severity"] = "UNKNOWN"
-            r["finding"] = "Could not retrieve cipher suite"
-            r["remediation"] = ["Manually verify symmetric encryption configuration"]
         else:
             r["severity"] = "UNKNOWN"
             r["finding"] = "Symmetric algorithm unclear: " + cipher
@@ -109,6 +103,5 @@ class HashAssessor:
             r["remediation"] = ["Current hash config is quantum-safe"]
         else:
             r["severity"] = "UNKNOWN"
-            r["finding"] = "Could not retrieve hash algorithm"
-            r["remediation"] = ["Manually verify hash function configuration"]
+            r["finding"] = "Hash unclear: " + alg
         return r

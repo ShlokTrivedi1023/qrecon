@@ -1,3 +1,4 @@
+
 class DHAssessor:
     def __init__(self, target, port, enum_results, verbose=False):
         self.enum_results = enum_results
@@ -22,5 +23,5 @@ class DHAssessor:
             r["remediation"] = ["Disable static RSA key exchange immediately", "Migrate to TLS 1.3"]
         else:
             r["severity"] = "INFO"
-            r["finding"] = "Key exchange: " + (cipher or "Unknown")
+            r["finding"] = "Key exchange: " + cipher
         return r
